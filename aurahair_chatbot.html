@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AuraHair AI – Personalised Haircare Consultant | Silk &amp; Root Botanicals</title>
+  <meta name="description" content="AuraHair AI is your personal trichologist from Silk & Root Botanicals. Share your hair type, scalp and concerns to receive a personalised botanical haircare regimen powered by Google Gemini.">
+  <meta name="theme-color" content="#0f1f1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <style>
+/* ============================================================
+   AuraHair AI – Silk & Root Botanicals
+   Chatbot-first application UI
+   ============================================================ */
+:root {
+  --bg-1: #0f1f1a;
+  --bg-2: #16302a;
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --sage: #6fb98f;
+  --sage-deep: #3f8a66;
+  --gold: #d7b46a;
+  --rose: #e6a3b3;
+  --ink: #f2f6f4;
+  --ink-soft: #b9c7c1;
+  --ink-mute: #849690;
+  --user-bubble: linear-gradient(135deg, #3f8a66, #2c6e5a);
+  --bot-bubble: #ffffff;
+  --bot-ink: #1f2d29;
+  --radius: 18px;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif: "Playfair Display", Georgia, serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(111, 185, 143, .25), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgba(215, 180, 106, .18), transparent 60%),
+    linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  background-attachment: fixed;
+  line-height: 1.55;
+}
+button { font-family: inherit; }
+
+/* ---------- App shell ---------- */
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: 100%;
+}
+
+/* ---------- Sidebar (hair profile) ---------- */
+.sidebar {
+  background: rgba(0, 0, 0, .25);
+  border-right: 1px solid var(--panel-border);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow-y: auto;
+}
+.brand { display: flex; align-items: center; gap: .8rem; }
+.brand-mark {
+  width: 46px; height: 46px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--sage), var(--sage-deep));
+  display: grid; place-items: center; font-size: 1.3rem; color: #fff;
+  box-shadow: 0 8px 20px rgba(63, 138, 102, .4);
+}
+.brand h1 { font-family: var(--serif); font-size: 1.35rem; margin: 0; line-height: 1.1; }
+.brand p { margin: .1rem 0 0; font-size: .75rem; color: var(--ink-soft); letter-spacing: .08em; text-transform: uppercase; }
+
+.side-block h2 {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--ink-mute); margin: 0 0 .7rem; font-weight: 600;
+}
+.chip-group { display: flex; flex-wrap: wrap; gap: .45rem; }
+.chip {
+  border: 1px solid var(--panel-border); background: var(--panel); color: var(--ink);
+  border-radius: 999px; padding: .38rem .85rem; font-size: .82rem; cursor: pointer;
+  transition: all .15s ease;
+}
+.chip:hover { border-color: var(--sage); }
+.chip.active { background: var(--sage); border-color: var(--sage); color: #0f1f1a; font-weight: 600; }
+
+.primary-btn {
+  width: 100%; border: 0; border-radius: 12px; padding: .8rem 1rem;
+  background: linear-gradient(135deg, var(--sage), var(--sage-deep)); color: #fff;
+  font-weight: 600; font-size: .92rem; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(63, 138, 102, .35);
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+}
+.primary-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.ghost-btn {
+  width: 100%; border: 1px solid var(--panel-border); border-radius: 12px; padding: .65rem 1rem;
+  background: transparent; color: var(--ink-soft); font-size: .85rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+}
+.ghost-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; background: var(--panel); padding: .3rem; border-radius: 12px; }
+.mode-switch button {
+  border: 0; background: transparent; color: var(--ink-soft); padding: .5rem; border-radius: 9px;
+  font-size: .82rem; cursor: pointer;
+}
+.mode-switch button.active { background: rgba(255,255,255,.12); color: var(--ink); font-weight: 600; }
+
+.field { margin-top: .7rem; }
+.field label { display: block; font-size: .75rem; color: var(--ink-mute); margin-bottom: .3rem; }
+.field input, .field select {
+  width: 100%; padding: .6rem .7rem; border-radius: 10px; border: 1px solid var(--panel-border);
+  background: rgba(0,0,0,.25); color: var(--ink); font: inherit; font-size: .86rem;
+}
+.field select option { color: #000; }
+.field .hint { font-size: .72rem; color: var(--ink-mute); margin: .3rem 0 0; }
+.field .hint a { color: var(--sage); }
+
+.side-footer { margin-top: auto; font-size: .75rem; color: var(--ink-mute); line-height: 1.5; }
+.side-footer a { color: var(--sage); text-decoration: none; }
+.side-footer a:hover { text-decoration: underline; }
+
+/* ---------- Chat area ---------- */
+.chat {
+  display: flex; flex-direction: column; min-width: 0; height: 100%;
+}
+.chat-header {
+  display: flex; align-items: center; gap: .9rem; padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(0,0,0,.15); backdrop-filter: blur(8px);
+}
+.menu-btn {
+  display: none; border: 1px solid var(--panel-border); background: var(--panel); color: var(--ink);
+  width: 40px; height: 40px; border-radius: 10px; font-size: 1rem; cursor: pointer;
+}
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sage), var(--gold)); display: grid; place-items: center;
+  color: #0f1f1a; font-size: 1.1rem; position: relative;
+}
+.avatar::after {
+  content: ""; position: absolute; right: 0; bottom: 0; width: 11px; height: 11px; border-radius: 50%;
+  background: #4ade80; border: 2px solid var(--bg-2);
+}
+.chat-title { line-height: 1.2; }
+.chat-title strong { display: block; font-size: 1rem; }
+.chat-title span { font-size: .78rem; color: var(--ink-soft); }
+.chat-header .status {
+  margin-left: auto; font-size: .74rem; color: var(--ink-soft);
+  border: 1px solid var(--panel-border); padding: .3rem .7rem; border-radius: 999px; white-space: nowrap;
+}
+.chat-header .status i { color: var(--sage); margin-right: .3rem; }
+
+.chat-log {
+  flex: 1; overflow-y: auto; padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  display: flex; flex-direction: column; gap: 1rem; scroll-behavior: smooth;
+}
+.msg-row { display: flex; gap: .7rem; align-items: flex-end; max-width: 780px; width: 100%; }
+.msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+.msg-row.bot { align-self: flex-start; }
+.msg-row.system { align-self: center; max-width: 560px; }
+.msg-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: .8rem;
+  background: linear-gradient(135deg, var(--sage), var(--gold)); color: #0f1f1a;
+}
+.msg-row.user .msg-avatar { background: rgba(255,255,255,.15); color: var(--ink); }
+.bubble {
+  padding: .85rem 1.1rem; border-radius: var(--radius); font-size: .95rem; max-width: 100%;
+  overflow-wrap: anywhere; box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.msg-row.user .bubble { background: var(--user-bubble); color: #fff; border-bottom-right-radius: 6px; }
+.msg-row.bot .bubble { background: var(--bot-bubble); color: var(--bot-ink); border-bottom-left-radius: 6px; }
+.msg-row.system .bubble {
+  background: rgba(215,180,106,.15); color: var(--gold); border: 1px solid rgba(215,180,106,.35);
+  font-size: .82rem; text-align: center; box-shadow: none;
+}
+.bubble p { margin: 0 0 .55rem; }
+.bubble p:last-child { margin-bottom: 0; }
+.bubble h4 { margin: .7rem 0 .3rem; font-size: .95rem; color: var(--sage-deep); }
+.bubble ul { margin: .2rem 0 .5rem; padding-left: 1.2rem; }
+.bubble li { margin: .2rem 0; }
+.bubble strong { color: var(--sage-deep); }
+.msg-row.user .bubble strong { color: #fff; }
+.timestamp { font-size: .68rem; color: var(--ink-mute); margin: .25rem .4rem 0; }
+.msg-row.user .timestamp { text-align: right; }
+
+.typing-dots { display: inline-flex; gap: 4px; align-items: center; height: 1.2em; }
+.typing-dots span {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--sage-deep); opacity: .4;
+  animation: blink 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* Suggestions */
+.suggestions {
+  display: flex; gap: .5rem; padding: .4rem clamp(1rem, 4vw, 3rem) .6rem; overflow-x: auto; scrollbar-width: none;
+}
+.suggestions::-webkit-scrollbar { display: none; }
+.suggestions button {
+  flex-shrink: 0; border: 1px solid var(--panel-border); background: var(--panel); color: var(--ink-soft);
+  border-radius: 999px; padding: .45rem .9rem; font-size: .8rem; cursor: pointer; white-space: nowrap;
+}
+.suggestions button:hover { border-color: var(--sage); color: var(--ink); }
+
+/* Composer */
+.composer {
+  padding: .6rem clamp(1rem, 4vw, 3rem) 1.1rem;
+}
+.composer form {
+  display: flex; align-items: flex-end; gap: .6rem;
+  background: rgba(255,255,255,.08); border: 1px solid var(--panel-border);
+  border-radius: 20px; padding: .5rem .5rem .5rem 1rem;
+}
+.composer form:focus-within { border-color: var(--sage); }
+.composer textarea {
+  flex: 1; border: 0; background: transparent; color: var(--ink); resize: none; font: inherit; font-size: .95rem;
+  max-height: 140px; min-height: 26px; padding: .35rem 0; outline: none; line-height: 1.45;
+}
+.composer textarea::placeholder { color: var(--ink-mute); }
+.send-btn {
+  width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--sage), var(--sage-deep)); color: #fff; font-size: 1rem;
+  display: grid; place-items: center; transition: transform .1s;
+}
+.send-btn:hover { transform: scale(1.05); }
+.send-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.disclaimer { text-align: center; font-size: .7rem; color: var(--ink-mute); margin: .55rem 0 0; }
+
+/* Empty-state welcome card */
+.welcome {
+  align-self: center; text-align: center; max-width: 560px; margin: auto 0; padding: 1rem;
+}
+.welcome .big-avatar {
+  width: 78px; height: 78px; border-radius: 50%; margin: 0 auto 1rem;
+  background: linear-gradient(135deg, var(--sage), var(--gold)); display: grid; place-items: center;
+  font-size: 2rem; color: #0f1f1a; box-shadow: 0 12px 30px rgba(111,185,143,.35);
+}
+.welcome h2 { font-family: var(--serif); font-size: 1.7rem; margin: 0 0 .4rem; }
+.welcome p { color: var(--ink-soft); margin: 0; font-size: .95rem; }
+
+/* Mobile drawer */
+.scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; }
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; width: min(320px, 85vw); z-index: 50;
+    transform: translateX(-100%); transition: transform .25s ease;
+    background: var(--bg-1);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .scrim.show { display: block; }
+  .menu-btn { display: grid; place-items: center; }
+  .chat-header .status { display: none; }
+  .msg-row { max-width: 100%; }
+  .bubble { font-size: .92rem; }
+}
+
+/* ============================================================
+   Code page (code.html)
+   ============================================================ */
+.code-page { height: auto; min-height: 100dvh; display: block; padding-bottom: 3rem; }
+.code-nav {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem clamp(1rem, 4vw, 3rem);
+  border-bottom: 1px solid var(--panel-border); background: rgba(0,0,0,.2); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(8px);
+}
+.code-nav .brand h1 { font-size: 1.15rem; }
+.code-nav .links { margin-left: auto; display: flex; gap: .5rem; flex-wrap: wrap; }
+.code-nav .links a, .code-nav .links button {
+  border: 1px solid var(--panel-border); background: var(--panel); color: var(--ink); text-decoration: none;
+  padding: .45rem .85rem; border-radius: 10px; font-size: .82rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem;
+}
+.code-nav .links a.accent { background: var(--sage); border-color: var(--sage); color: #0f1f1a; font-weight: 600; }
+.code-main { max-width: 1000px; margin: 0 auto; padding: 1.5rem clamp(1rem, 4vw, 3rem) 0; }
+.code-intro { color: var(--ink-soft); font-size: .95rem; margin: 0 0 1.5rem; }
+.code-intro h2 { font-family: var(--serif); color: var(--ink); font-size: 1.6rem; margin: 0 0 .4rem; }
+.file-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.file-tabs button {
+  border: 1px solid var(--panel-border); background: var(--panel); color: var(--ink-soft);
+  padding: .5rem .9rem; border-radius: 10px; font-size: .84rem; cursor: pointer; font-family: "JetBrains Mono", monospace;
+}
+.file-tabs button.active { background: rgba(255,255,255,.14); color: var(--ink); border-color: var(--sage); }
+.code-card { display: none; border: 1px solid var(--panel-border); border-radius: 14px; overflow: hidden; background: #0b1512; }
+.code-card.active { display: block; }
+.code-head {
+  display: flex; align-items: center; gap: .8rem; padding: .6rem 1rem; background: rgba(255,255,255,.05);
+  font-family: "JetBrains Mono", monospace; font-size: .8rem; color: var(--ink-soft); border-bottom: 1px solid var(--panel-border);
+}
+.code-head .desc { color: var(--ink-mute); font-family: var(--sans); }
+.code-head .actions { margin-left: auto; display: flex; gap: .4rem; }
+.code-head .actions a, .code-head .actions button {
+  border: 1px solid var(--panel-border); background: transparent; color: var(--ink); text-decoration: none;
+  padding: .3rem .7rem; border-radius: 8px; font-size: .76rem; cursor: pointer; font-family: var(--sans);
+}
+.code-head .actions button.copied { background: var(--sage); color: #0f1f1a; border-color: var(--sage); }
+pre.code {
+  margin: 0; padding: 1rem 1.1rem; overflow-x: auto; color: #d7e4de;
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace; font-size: .8rem; line-height: 1.6; tab-size: 4;
+}
+.note { border-left: 3px solid var(--gold); background: rgba(215,180,106,.1); padding: .8rem 1rem; border-radius: 8px; font-size: .88rem; color: var(--ink-soft); margin: 1.2rem 0; }
+.note strong { color: var(--gold); }
+
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ===== Sidebar: hair profile & settings ===== -->
+  <aside class="sidebar" id="sidebar" aria-label="Hair profile and settings">
+    <div class="brand">
+      <div class="brand-mark"><i class="fa-solid fa-leaf"></i></div>
+      <div>
+        <h1>AuraHair AI</h1>
+        <p>Silk &amp; Root Botanicals</p>
+      </div>
+    </div>
+
+    <section class="side-block" aria-labelledby="profile-heading">
+      <h2 id="profile-heading"><i class="fa-solid fa-user-pen"></i> Your hair profile</h2>
+
+      <div class="field">
+        <label>Hair type</label>
+        <div class="chip-group" id="hair-chips" role="group" aria-label="Hair type">
+          <button type="button" class="chip" data-value="Straight">Straight</button>
+          <button type="button" class="chip" data-value="Wavy">Wavy</button>
+          <button type="button" class="chip" data-value="Curly">Curly</button>
+          <button type="button" class="chip" data-value="Coily">Coily</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Scalp condition</label>
+        <div class="chip-group" id="scalp-chips" role="group" aria-label="Scalp condition">
+          <button type="button" class="chip" data-value="Oily">Oily</button>
+          <button type="button" class="chip" data-value="Dry">Dry</button>
+          <button type="button" class="chip" data-value="Normal">Normal</button>
+          <button type="button" class="chip" data-value="Sensitive">Sensitive</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Key concerns <span style="opacity:.6">(pick any)</span></label>
+        <div class="chip-group" id="concern-chips" role="group" aria-label="Key concerns">
+          <button type="button" class="chip" data-value="Dandruff">Dandruff</button>
+          <button type="button" class="chip" data-value="Hair Fall">Hair Fall</button>
+          <button type="button" class="chip" data-value="Frizz">Frizz</button>
+          <button type="button" class="chip" data-value="Dryness">Dryness</button>
+          <button type="button" class="chip" data-value="Breakage">Breakage</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <button type="button" class="primary-btn" id="profile-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Get my regimen</button>
+      </div>
+      <div class="field">
+        <button type="button" class="ghost-btn" id="reset-btn"><i class="fa-solid fa-rotate-left"></i> New consultation</button>
+      </div>
+    </section>
+
+    <section class="side-block" aria-labelledby="engine-heading">
+      <h2 id="engine-heading"><i class="fa-solid fa-microchip"></i> AI engine</h2>
+      <div class="mode-switch" role="group" aria-label="AI engine mode">
+        <button type="button" id="mode-offline" class="active">Demo</button>
+        <button type="button" id="mode-live">Gemini API</button>
+      </div>
+      <div id="live-settings" hidden>
+        <div class="field">
+          <label for="api-key-input">Gemini API key</label>
+          <input type="password" id="api-key-input" placeholder="AIza…" autocomplete="off">
+          <p class="hint">Free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com</a>. Stored only in this tab.</p>
+        </div>
+        <div class="field">
+          <label for="model-select">Model</label>
+          <select id="model-select">
+            <option value="gemini-2.5-flash" selected>gemini-2.5-flash</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+            <option value="gemini-1.5-pro-latest">gemini-1.5-pro-latest</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <div class="side-footer">
+      Bonus Activity 19 · Google Gemini API<br>
+      <a href="AuraHair_AI_Source_Code.docx" download><i class="fa-solid fa-file-word"></i> Source code (.docx)</a>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ===== Chat ===== -->
+  <main class="chat" id="chat">
+    <header class="chat-header">
+      <button type="button" class="menu-btn" id="menu-btn" aria-label="Open hair profile"><i class="fa-solid fa-bars"></i></button>
+      <div class="avatar"><i class="fa-solid fa-leaf"></i></div>
+      <div class="chat-title">
+        <strong>AuraHair AI</strong>
+        <span>Expert trichologist · Silk &amp; Root Botanicals</span>
+      </div>
+      <span class="status" id="chat-status"><i class="fa-solid fa-circle"></i>Demo mode</span>
+    </header>
+
+    <section class="chat-log" id="chat-log" aria-live="polite" aria-label="Conversation"></section>
+
+    <nav class="suggestions" id="suggestions" aria-label="Suggested questions">
+      <button type="button" data-prompt="Hi! My scalp gets very itchy and oily by evening, but my ends are super frizzy and dry. What routine do you suggest?">💧 Oily scalp, frizzy ends</button>
+      <button type="button" data-prompt="I have coily hair with dandruff. Help!">❄️ Coily hair + dandruff</button>
+      <button type="button" data-prompt="Is rosemary oil safe to use every day?">🌿 Rosemary oil daily?</button>
+      <button type="button" data-prompt="I'm losing a lot of hair after pregnancy.">💛 Postpartum hair fall</button>
+      <button type="button" data-prompt="How often should I oil my hair?">🫙 How often to oil?</button>
+    </nav>
+
+    <footer class="composer">
+      <form id="chat-form">
+        <textarea id="chat-text" rows="1" placeholder="Tell AuraHair about your hair…" aria-label="Your message"></textarea>
+        <button type="submit" class="send-btn" id="send-btn" aria-label="Send"><i class="fa-solid fa-arrow-up"></i></button>
+      </form>
+      <p class="disclaimer">AuraHair AI offers wellness guidance, not medical advice. For severe or persistent scalp issues, consult a dermatologist.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   AuraHair AI – chatbot application logic
+   - Hair profile chips (sidebar) → structured intake
+   - Demo engine: rule-based trichologist (works offline, no key)
+   - Gemini engine: real Google Gemini API with the same system prompt
+   - Multi-turn conversation memory, markdown rendering, mobile drawer
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var BRAND = 'Silk & Root Botanicals';
+  var BOT_NAME = 'AuraHair AI';
+
+  /* ---------------- System prompt (identical to the Python program) ---------------- */
+  var SYSTEM_INSTRUCTION =
+    "You are '" + BOT_NAME + "', an expert trichologist and personalised hair-wellness consultant for '" + BRAND + "', a botanical haircare startup.\n\n" +
+    'YOUR GOALS\n' +
+    '1. Greet the client warmly. If not already known, ask about hair type (Straight/Wavy/Curly/Coily), scalp condition (Oily/Dry/Normal/Sensitive) and key concerns (Dandruff, Hair Fall, Frizz, Dryness, Breakage, Colour damage).\n' +
+    '2. Recommend a customised botanical ingredient regimen (Rosemary extract, Argan oil, Keratin, Salicylic acid, Tea-tree oil, Aloe vera, Biotin, Hibiscus, Bhringraj, Niacinamide) structured as Cleanse -> Treat -> Condition -> Protect with weekly frequency.\n' +
+    '3. Explain briefly WHY each ingredient helps (science-backed, plain language).\n' +
+    '4. Always be empathetic, encouraging and friendly. Keep answers concise; use bullet points and short headings.\n\n' +
+    'SAFETY RULES\n' +
+    '- You are not a doctor. For severe hair loss, bleeding, infection, sudden bald patches or allergic reactions, advise consulting a dermatologist.\n' +
+    '- Never invent product names or medical claims. Do not discuss topics unrelated to hair and scalp wellness; politely steer back.\n' +
+    '- Ask ONE clarifying question at a time if information is missing.';
+
+  /* ---------------- DOM ---------------- */
+  var $ = function (id) { return document.getElementById(id); };
+  var log = $('chat-log'), form = $('chat-form'), textarea = $('chat-text'), sendBtn = $('send-btn');
+  var statusEl = $('chat-status'), modeOffline = $('mode-offline'), modeLive = $('mode-live');
+  var liveSettings = $('live-settings'), apiKeyInput = $('api-key-input'), modelSelect = $('model-select');
+  var profileBtn = $('profile-btn'), resetBtn = $('reset-btn'), suggestions = $('suggestions');
+  var sidebar = $('sidebar'), scrim = $('scrim'), menuBtn = $('menu-btn');
+
+  var mode = 'offline';
+  var history = [];                                  // Gemini contents format
+  var profile = { hair: '', scalp: '', concerns: [] };
+  var busy = false;
+
+  /* ---------------- Helpers ---------------- */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // Lightweight markdown → HTML (headings, bullets, bold, paragraphs)
+  function renderMarkdown(text) {
+    var lines = escapeHtml(text).split('\n');
+    var html = '', inList = false, para = [];
+    function flushPara() {
+      if (para.length) { html += '<p>' + para.join('<br>') + '</p>'; para = []; }
+    }
+    function closeList() { if (inList) { html += '</ul>'; inList = false; } }
+    lines.forEach(function (raw) {
+      var line = raw.trim();
+      if (!line) { flushPara(); closeList(); return; }
+      var m;
+      if ((m = line.match(/^#{1,4}\s+(.*)/))) { flushPara(); closeList(); html += '<h4>' + m[1] + '</h4>'; return; }
+      if ((m = line.match(/^\*\*(\d+\.\s[^*]+)\*\*\s*[–-]?\s*(.*)$/))) { // "**1. Cleanse** – text"
+        flushPara(); closeList(); html += '<h4>' + m[1] + '</h4>'; if (m[2]) para.push(m[2]); return;
+      }
+      if ((m = line.match(/^(?:[•\-\*]|\d+\.)\s+(.*)/))) {
+        flushPara(); if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + m[1] + '</li>'; return;
+      }
+      closeList(); para.push(line);
+    });
+    flushPara(); closeList();
+    return html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+  function timeNow() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  function addMessage(role, text) {
+    var row = document.createElement('div');
+    row.className = 'msg-row ' + role;
+    var icon = role === 'user' ? 'fa-user' : 'fa-leaf';
+    var avatar = role === 'system' ? '' : '<div class="msg-avatar"><i class="fa-solid ' + icon + '"></i></div>';
+    var body = role === 'system' ? escapeHtml(text) : renderMarkdown(text);
+    row.innerHTML = avatar + '<div><div class="bubble">' + body + '</div>' + (role !== 'system' ? '<div class="timestamp">' + timeNow() + '</div>' : '') + '</div>';
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+    return row;
+  }
+  function addTyping() {
+    var row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.innerHTML = '<div class="msg-avatar"><i class="fa-solid fa-leaf"></i></div><div><div class="bubble"><span class="typing-dots"><span></span><span></span><span></span></span></div></div>';
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+    return row;
+  }
+  function setBusy(b) { busy = b; sendBtn.disabled = b; profileBtn.disabled = b; }
+
+  function greet() {
+    log.innerHTML = '';
+    var w = document.createElement('div');
+    w.className = 'welcome';
+    w.innerHTML = '<div class="big-avatar"><i class="fa-solid fa-leaf"></i></div>' +
+      '<h2>Hello, I\'m AuraHair AI 🌿</h2>' +
+      '<p>Your personal trichologist from ' + BRAND + '. Tell me about your hair, or set your profile in the panel and I\'ll design a botanical regimen just for you.</p>';
+    log.appendChild(w);
+    addMessage('bot', 'Welcome! I\'d love to help your hair thrive. To start, how would you describe your **hair type** – Straight, Wavy, Curly or Coily?');
+  }
+  function clearWelcome() {
+    var w = log.querySelector('.welcome');
+    if (w) w.remove();
+  }
+
+  /* ---------------- Sidebar chips ---------------- */
+  function bindChips(groupId, multi, onChange) {
+    var group = $(groupId);
+    group.addEventListener('click', function (e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      if (multi) {
+        chip.classList.toggle('active');
+      } else {
+        group.querySelectorAll('.chip').forEach(function (c) { c.classList.toggle('active', c === chip && !c.classList.contains('active')); });
+      }
+      onChange(Array.prototype.map.call(group.querySelectorAll('.chip.active'), function (c) { return c.dataset.value; }));
+    });
+  }
+  bindChips('hair-chips', false, function (v) { profile.hair = (v[0] || '').toLowerCase(); });
+  bindChips('scalp-chips', false, function (v) { profile.scalp = (v[0] || '').toLowerCase(); });
+  bindChips('concern-chips', true, function (v) { profile.concerns = v.map(function (x) { return x.toLowerCase(); }); });
+
+  function clearChips() {
+    document.querySelectorAll('.chip.active').forEach(function (c) { c.classList.remove('active'); });
+  }
+
+  /* ---------------- Mobile drawer ---------------- */
+  function openDrawer(open) { sidebar.classList.toggle('open', open); scrim.classList.toggle('show', open); }
+  menuBtn.addEventListener('click', function () { openDrawer(true); });
+  scrim.addEventListener('click', function () { openDrawer(false); });
+
+  /* ---------------- Mode ---------------- */
+  function setMode(m) {
+    mode = m;
+    modeOffline.classList.toggle('active', m === 'offline');
+    modeLive.classList.toggle('active', m === 'live');
+    liveSettings.hidden = m !== 'live';
+    statusEl.innerHTML = '<i class="fa-solid fa-circle"></i>' + (m === 'live' ? 'Gemini ' + modelSelect.value : 'Demo mode');
+    clearWelcome();
+    addMessage('system', m === 'live' ? 'Connected to Google Gemini. Paste your API key in the panel to chat with the real model.' : 'Demo mode: built-in trichologist knowledge base, no API key needed.');
+  }
+  modeOffline.addEventListener('click', function () { setMode('offline'); });
+  modeLive.addEventListener('click', function () { setMode('live'); });
+  modelSelect.addEventListener('change', function () { if (mode === 'live') statusEl.innerHTML = '<i class="fa-solid fa-circle"></i>Gemini ' + modelSelect.value; });
+
+  /* ---------------- Demo knowledge base ---------------- */
+  var KB = {
+    scalp: {
+      oily: { cleanse: 'Salicylic-acid + Tea-tree clarifying shampoo on the scalp only, 2–3× a week. Salicylic acid dissolves the oil that clogs follicles and causes itch; tea-tree is naturally antimicrobial.',
+              treat: 'Rosemary-extract scalp tonic 2× a week – boosts micro-circulation and helps regulate sebum.' },
+      dry: { cleanse: 'Sulphate-free Aloe-vera + Hibiscus cream shampoo, 1–2× a week – cleanses without stripping natural oils.',
+             treat: 'Warm Bhringraj + Argan oil scalp massage once a week, 30 min before washing – nourishes and soothes flaking.' },
+      normal: { cleanse: 'Gentle Rosemary + Aloe shampoo, 2× a week, to maintain your natural balance.',
+                treat: 'Rosemary scalp tonic 1–2× a week for long-term follicle health.' },
+      sensitive: { cleanse: 'Fragrance-free Oat + Aloe shampoo, 2× a week – minimises irritation.',
+                   treat: 'Niacinamide + Aloe soothing serum 2× a week – strengthens the scalp barrier and calms redness.' }
+    },
+    concern: {
+      dandruff: 'Dandruff: alternate in a Salicylic-acid / Tea-tree treatment shampoo weekly. If flakes are yellow and greasy, or the skin is red, a dermatologist can rule out seborrhoeic dermatitis.',
+      'hair fall': 'Hair fall: Rosemary extract (clinical studies show results comparable to 2% minoxidil over 6 months), a Biotin + Bhringraj scalp serum nightly, and detangling only on damp, conditioned hair.',
+      frizz: 'Frizz: Argan-oil + Keratin leave-in on damp lengths, dry with a microfibre towel and sleep on silk. Frizz is a raised cuticle – these smooth and seal it.',
+      dryness: 'Dryness: weekly Shea + Argan deep-conditioning mask (15 min under a heat cap) and a hydrating Aloe leave-in mist between washes.',
+      breakage: 'Breakage: Hydrolysed-Keratin protein mask every 2 weeks, alternated with moisture masks, and a trim every 8–10 weeks.'
+    },
+    hair: {
+      straight: 'Straight hair shows oil fast – keep conditioner off the roots and choose lightweight serums.',
+      wavy: 'Wavy hair loves moisture without weight – apply products on soaking-wet hair and scrunch to define the waves.',
+      curly: 'Curly hair needs generous moisture – co-wash between shampoos and apply leave-in with the "praying-hands" method.',
+      coily: 'Coily hair is the most fragile – use the LOC method (Liquid → Oil → Cream), protective styles, and shampoo just once a week.'
+    }
+  };
+
+  function updateProfileFromText(t) {
+    var hair = ['straight', 'wavy', 'curly', 'coily'].filter(function (h) { return t.indexOf(h) !== -1; })[0];
+    if (hair) profile.hair = hair;
+    if (/itchy|greasy|oily/.test(t)) profile.scalp = 'oily';
+    else if (/sensitive|burn|sting/.test(t)) profile.scalp = 'sensitive';
+    else if (/dry scalp|flaky|flak/.test(t)) profile.scalp = profile.scalp || 'dry';
+    var map = { dandruff: 'dandruff', flak: 'dandruff', 'hair fall': 'hair fall', 'hair loss': 'hair fall', losing: 'hair fall', shedding: 'hair fall', thinning: 'hair fall', frizz: 'frizz', 'dry ends': 'dryness', dryness: 'dryness', breakage: 'breakage', split: 'breakage' };
+    Object.keys(map).forEach(function (k) {
+      if (t.indexOf(k) !== -1 && profile.concerns.indexOf(map[k]) === -1) profile.concerns.push(map[k]);
+    });
+  }
+
+  function buildRegimen(userText) {
+    var t = userText.toLowerCase();
+    var scalpKey = profile.scalp || 'normal';
+    var sc = KB.scalp[scalpKey] || KB.scalp.normal;
+    var out = [];
+    if (profile.scalp === 'oily' && /frizz|dry/.test(t)) {
+      out.push('An oily, itchy scalp with dry, frizzy ends is a classic "combination hair" pattern – very common and very fixable! Here\'s a balanced botanical regimen for you:');
+    } else {
+      var desc = [];
+      if (profile.hair) desc.push(profile.hair + ' hair');
+      desc.push(scalpKey + ' scalp');
+      if (profile.concerns.length) desc.push('concern: ' + profile.concerns.join(', '));
+      out.push('Thank you for sharing! Here\'s a personalised botanical regimen for your ' + desc.join(' · ') + ':');
+    }
+    out.push('');
+    out.push('**1. Cleanse** – ' + sc.cleanse);
+    out.push('**2. Treat** – ' + sc.treat);
+    out.push('**3. Condition** – Every wash, mid-lengths to ends only: Argan-oil + Keratin conditioner. Argan\'s fatty acids and vitamin E seal the cuticle; hydrolysed keratin patches protein gaps that make ends rough.');
+    out.push('**4. Protect** – A pea-sized amount of Argan serum on damp ends' + (profile.scalp === 'oily' ? ', kept away from the roots to stay fresh.' : ' and a heat protectant before any styling.'));
+    profile.concerns.forEach(function (c) { if (KB.concern[c]) out.push('', '🎯 ' + KB.concern[c]); });
+    if (profile.hair && KB.hair[profile.hair]) out.push('', '💡 ' + KB.hair[profile.hair]);
+    out.push('', 'Rinse with lukewarm water – hot water over-stimulates oil glands and lifts the cuticle. Give it 4–6 weeks; healthy hair is a journey and you\'re on the right track! 💚');
+    if (!profile.hair) out.push('', 'One more thing so I can fine-tune this: is your hair Straight, Wavy, Curly or Coily?');
+    return out.join('\n');
+  }
+
+  function demoReply(userText) {
+    var t = userText.toLowerCase();
+
+    if (/bald patch|bleeding|pus|infection|severe pain|allerg|swelling|blister/.test(t)) {
+      return 'I\'m really sorry you\'re dealing with this – it sounds uncomfortable and worrying. 💛\n\nSymptoms like these can point to a medical condition that needs a proper diagnosis, so I\'d gently recommend seeing a **dermatologist** as soon as you can. I\'m a hair-wellness consultant, not a doctor, and I don\'t want to guess.\n\nIn the meantime:\n• Keep the area clean and avoid heat styling, oils and new products\n• Use only a fragrance-free, gentle cleanser\n\nOnce your doctor gives the all-clear, I\'d love to build a soothing botanical regimen for you.';
+    }
+    if (/homework|python|code|weather|stock|recipe|movie|football|cricket|maths|essay|joke/.test(t) && !/hair|scalp/.test(t)) {
+      return 'That\'s outside my little garden of expertise! 🌿 I\'m ' + BOT_NAME + ', so I can only help with hair and scalp wellness.\n\nIs there anything about your hair – dryness, frizz, dandruff, hair fall – that I can help with today?';
+    }
+
+    updateProfileFromText(t);
+
+    if (/rosemary/.test(t) && /(safe|every ?day|daily|often|how much)/.test(t)) {
+      var oilyNote = profile.scalp === 'oily' ? '\n\nSince you mentioned an oily scalp, stick to the water-based tonic rather than heavy oil blends.' : '';
+      return 'Great question – rosemary is one of my favourite botanicals! 🌿\n\n• **Diluted tonic** (a few drops in a water/aloe base): daily use is safe for most people\n• **Pure oil or carrier-oil blend**: limit to 2× a week – it can weigh hair down and add to oiliness\n• Always **patch-test** behind the ear for 24 hours first; stop if you notice redness or burning\n• Avoid during pregnancy without your doctor\'s OK' + oilyNote + '\n\nGive it 4–6 weeks to see the circulation-boosting benefits – consistency beats quantity! 💚';
+    }
+    if (/how often.*oil|oil.*how often|oiling/.test(t)) {
+      var f = profile.scalp === 'oily' ? 'once a week, lengths only (skip the scalp)' : profile.scalp === 'dry' ? '2× a week, including a gentle scalp massage' : '1–2× a week';
+      return 'Oiling is wonderful when done right! 🌿\n\n• **Frequency:** ' + f + '\n• **Timing:** 30–60 minutes before washing, not overnight – prolonged oil can trap dust and clog follicles\n• **Which oil:** Argan for frizz and shine, Bhringraj or Rosemary-infused oil for growth, Coconut for protein protection on coily/curly hair\n• **How:** warm slightly, apply with fingertips, massage the scalp for 3–5 minutes\n\nWould you like me to build a full weekly routine around this?';
+    }
+    if (/pregnan|postpartum|after (my )?baby|breastfeed/.test(t)) {
+      return 'Congratulations, and thank you for sharing – postpartum shedding is very common and usually temporary. 💛\n\nDuring pregnancy, high oestrogen keeps hairs in the growth phase; 2–4 months after birth many shed at once (telogen effluvium). It normally settles within 6–12 months.\n\n**Gentle support regimen**\n• **Cleanse:** mild Aloe + Hibiscus shampoo, 2× a week\n• **Treat:** Bhringraj + Biotin scalp serum nightly with a 2-minute finger massage\n• **Condition:** Argan + Keratin conditioner on lengths to protect fragile new growth\n• **Protect:** loose styles, a silk pillowcase, and an iron- and protein-rich diet\n\n⚠️ Skip essential oils like rosemary while breastfeeding unless your doctor approves. If shedding continues past a year or you notice patches, please see a dermatologist. You\'re doing great!';
+    }
+
+    // Structured intake – one question at a time
+    if (!profile.hair && !profile.scalp && !profile.concerns.length) {
+      return 'Thank you for reaching out! 🌿 To personalise your regimen I\'d love to know a little more.\n\nFirst: how would you describe your **hair type** – Straight, Wavy, Curly or Coily?';
+    }
+    if (!profile.scalp && !profile.concerns.length) {
+      return 'Lovely – ' + profile.hair + ' hair it is! ' + KB.hair[profile.hair] + '\n\nNext: how does your **scalp** usually feel by the end of the day – Oily, Dry, Normal or Sensitive?';
+    }
+    return buildRegimen(userText);
+  }
+
+  /* ---------------- Gemini API ---------------- */
+  function callGemini(userText) {
+    var key = apiKeyInput.value.trim();
+    if (!key) return Promise.reject(new Error('Please paste your Gemini API key in the side panel first.'));
+    var model = modelSelect.value;
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+
+    history.push({ role: 'user', parts: [{ text: userText }] });
+    var body = {
+      system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+      contents: history,
+      generationConfig: { temperature: 0.7, topP: 0.9, maxOutputTokens: 700 },
+      safetySettings: ['HARM_CATEGORY_HARASSMENT', 'HARM_CATEGORY_HATE_SPEECH', 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'HARM_CATEGORY_DANGEROUS_CONTENT']
+        .map(function (c) { return { category: c, threshold: 'BLOCK_MEDIUM_AND_ABOVE' }; })
+    };
+
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          history.pop();
+          var msg = (res.json && res.json.error && res.json.error.message) || ('HTTP ' + res.status);
+          if (res.status === 429) msg = 'Rate limit reached. Please wait a minute and try again.';
+          else if (res.status === 400 || res.status === 403) msg = 'Invalid API key or model. ' + msg;
+          throw new Error(msg);
+        }
+        var cand = res.json.candidates && res.json.candidates[0];
+        var text = cand && cand.content && cand.content.parts ? cand.content.parts.map(function (p) { return p.text || ''; }).join('') : '';
+        if (!text) {
+          history.pop();
+          var reason = (res.json.promptFeedback && res.json.promptFeedback.blockReason) || (cand && cand.finishReason) || 'unknown';
+          return 'I\'m sorry, I couldn\'t answer that (' + reason + '). Let\'s keep our chat focused on your hair and scalp wellness.';
+        }
+        history.push({ role: 'model', parts: [{ text: text }] });
+        return text.trim();
+      });
+  }
+
+  /* ---------------- Send ---------------- */
+  function send(text) {
+    text = (text || '').trim();
+    if (!text || busy) return;
+    clearWelcome();
+    addMessage('user', text);
+    textarea.value = '';
+    textarea.style.height = 'auto';
+    setBusy(true);
+    var typing = addTyping();
+
+    var p = mode === 'live'
+      ? callGemini(text)
+      : new Promise(function (resolve) { setTimeout(function () { resolve(demoReply(text)); }, 600 + Math.random() * 600); });
+
+    p.then(function (reply) {
+      typing.remove();
+      addMessage('bot', reply);
+    }).catch(function (err) {
+      typing.remove();
+      addMessage('system', '⚠️ ' + err.message);
+    }).finally(function () {
+      setBusy(false);
+      textarea.focus();
+    });
+  }
+
+  form.addEventListener('submit', function (e) { e.preventDefault(); send(textarea.value); });
+  textarea.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(textarea.value); }
+  });
+  textarea.addEventListener('input', function () {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
+  });
+  suggestions.addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (btn) send(btn.dataset.prompt || btn.textContent);
+  });
+
+  profileBtn.addEventListener('click', function () {
+    var parts = [];
+    if (profile.hair) parts.push(profile.hair + ' hair');
+    if (profile.scalp) parts.push(profile.scalp + ' scalp');
+    if (profile.concerns.length) parts.push('concerns: ' + profile.concerns.join(', '));
+    if (!parts.length) { clearWelcome(); addMessage('system', 'Select your hair type, scalp or a concern first.'); return; }
+    openDrawer(false);
+    send('Here is my hair profile – ' + parts.join(', ') + '. Please give me my personalised regimen.');
+  });
+
+  resetBtn.addEventListener('click', function () {
+    profile = { hair: '', scalp: '', concerns: [] };
+    history = [];
+    clearChips();
+    openDrawer(false);
+    greet();
+  });
+
+  greet();
+})();
+
+</script>
+</body>
+</html>
